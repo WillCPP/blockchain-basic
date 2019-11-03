@@ -1,4 +1,6 @@
+using blockchain_basic;
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -7,21 +9,32 @@ public class Block {
     public DateTime TimeStamp { get; set; }
     public string PreviousHash { get; set; }
     public string Hash { get; set; }
-    public string Data { get; set; }
+    public IList<Transaction> Transactions { get; set; }
+    public int Nonce { get; set; } = 0;
 
-    public Block(DateTime timeStamp, string perviousHash, string data) {
+    public Block(DateTime timeStamp, string perviousHash, IList<Transaction> transactions) {
         Index = 0;
         TimeStamp = timeStamp;
-        Data = data;
+        Transactions = transactions;
         Hash = CalculateHash();
     }
 
     public string CalculateHash() {
         SHA256 sha256 = SHA256.Create();
 
-        byte[] inputBytes = Encoding.ASCII.GetBytes($"{TimeStamp}-{PreviousHash ?? ""}-{Data}");
+        byte[] inputBytes = Encoding.ASCII.GetBytes($"{TimeStamp}-{PreviousHash ?? ""}-{Transactions}-{Nonce}");
         byte[] outputBytes = sha256.ComputeHash(inputBytes);
 
         return Convert.ToBase64String(outputBytes);
+    }
+
+    public void Mine(int difficulty)
+    {
+        String leadingZeros = new string('0', difficulty);
+        while (this.Hash == null || this.Hash.Substring(0, difficulty) != leadingZeros)
+        {
+            this.Nonce++;
+            this.Hash = this.CalculateHash();
+        }
     }
 }
